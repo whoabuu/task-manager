@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import api from '../api/axios'; 
 
 interface Task {
   _id: string;
@@ -10,32 +11,77 @@ interface Task {
 }
 
 const Dashboard = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    { _id: '1', title: 'Setup MERN Architecture', description: 'Initialize Vite and Express', status: 'Completed', createdAt: new Date().toISOString() },
-    { _id: '2', title: 'Build Dashboard UI', description: 'Create task cards and forms', status: 'In Progress', createdAt: new Date().toISOString() },
-    { _id: '3', title: 'Connect to MongoDB', description: 'Write Mongoose schemas', status: 'Pending', createdAt: new Date().toISOString() },
-  ]);
-
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Filters and Form State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDesc, setNewTaskDesc] = useState('');
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  // 1. READ: Fetch tasks from the backend on load
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await api.get('/tasks');
+        setTasks(response.data);
+      } catch (error) {
+        console.error('Failed to fetch tasks', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  // 2. CREATE: Send new task to the backend
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
-    const newTask: Task = {
-      _id: Date.now().toString(),
-      title: newTaskTitle,
-      description: newTaskDesc,
-      status: 'Pending',
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const response = await api.post('/tasks', {
+        title: newTaskTitle,
+        description: newTaskDesc,
+      });
+      
+      // Add the newly created task (from the DB) to the top of the list
+      setTasks([response.data, ...tasks]);
+      setNewTaskTitle('');
+      setNewTaskDesc('');
+    } catch (error) {
+      console.error('Failed to create task', error);
+    }
+  };
 
-    setTasks([newTask, ...tasks]);
-    setNewTaskTitle('');
-    setNewTaskDesc('');
+  // 3. DELETE: Remove task from backend and UI
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await api.delete(`/tasks/${id}`);
+      setTasks(tasks.filter((task) => task._id !== id));
+    } catch (error) {
+      console.error('Failed to delete task', error);
+    }
+  };
+
+  // 4. UPDATE: Cycle through task statuses
+  const handleToggleStatus = async (task: Task) => {
+    const statusCycle: Record<string, 'Pending' | 'In Progress' | 'Completed'> = {
+      'Pending': 'In Progress',
+      'In Progress': 'Completed',
+      'Completed': 'Pending'
+    };
+    
+    const nextStatus = statusCycle[task.status];
+
+    try {
+      const response = await api.put(`/tasks/${task._id}`, { status: nextStatus });
+      // Update the specific task in the UI array
+      setTasks(tasks.map((t) => t._id === task._id ? response.data : t));
+    } catch (error) {
+      console.error('Failed to update status', error);
+    }
   };
 
   const filteredTasks = tasks.filter((task) => {
@@ -117,19 +163,26 @@ const Dashboard = () => {
 
           {/* --- Right Column: Task List --- */}
           <div className="lg:col-span-2 space-y-5">
-            {filteredTasks.length === 0 ? (
+            {isLoading ? (
+               <div className="rounded-[2rem] border-2 border-dashed border-white/10 bg-white/5 backdrop-blur-xl p-16 text-center text-zinc-400 animate-pulse">
+                 Loading your tasks...
+               </div>
+            ) : filteredTasks.length === 0 ? (
               <div className="rounded-[2rem] border-2 border-dashed border-white/10 bg-white/5 backdrop-blur-xl p-16 text-center text-zinc-400">
                 <p className="text-lg font-medium text-white mb-2">No tasks found</p>
                 <p className="text-sm">Try adjusting your search or create a new task.</p>
               </div>
             ) : (
               filteredTasks.map((task) => (
-               
                 <div key={task._id} className="group rounded-[2rem] bg-[#404040]/40 p-6 border border-white/10 shadow-xl backdrop-blur-2xl saturate-150 flex flex-col sm:flex-row justify-between gap-5 hover:bg-[#404040]/50 hover:border-white/20 transition-all duration-300">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white tracking-tight">{task.title}</h3>
+                    <h3 className={`text-xl font-bold tracking-tight transition-all duration-300 ${task.status === 'Completed' ? 'text-zinc-500 line-through' : 'text-white'}`}>
+                      {task.title}
+                    </h3>
                     {task.description && (
-                      <p className="mt-2 text-sm text-zinc-300 leading-relaxed">{task.description}</p>
+                      <p className={`mt-2 text-sm leading-relaxed transition-all duration-300 ${task.status === 'Completed' ? 'text-zinc-600' : 'text-zinc-300'}`}>
+                        {task.description}
+                      </p>
                     )}
                     <p className="mt-4 text-xs font-medium text-zinc-500">
                       Created {new Date(task.createdAt).toLocaleDateString()}
@@ -137,18 +190,23 @@ const Dashboard = () => {
                   </div>
                   
                   <div className="flex flex-col items-start sm:items-end justify-between border-t border-white/10 sm:border-t-0 pt-4 sm:pt-0">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider border shadow-inner
-                      ${task.status === 'Completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                        task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                        'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                      {task.status}
-                    </span>
                     
+                    {/* Clickable Status Badge to toggle status */}
+                    <button 
+                      onClick={() => handleToggleStatus(task)}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider border shadow-inner hover:scale-105 transition-all duration-200
+                      ${task.status === 'Completed' ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20' : 
+                        task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20' : 
+                        'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'}`}>
+                      {task.status} ↻
+                    </button>
+                    
+                    {/* Action Buttons */}
                     <div className="mt-4 flex gap-2">
-                       <button className="flex h-8 items-center justify-center rounded-full bg-white/5 px-4 text-xs font-semibold text-white border border-white/10 shadow-inner hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-white/30">
-                         Edit
-                       </button>
-                       <button className="flex h-8 items-center justify-center rounded-full bg-red-500/10 px-4 text-xs font-semibold text-red-400 border border-red-500/20 shadow-inner hover:bg-red-500/20 hover:text-red-300 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/30">
+                       <button 
+                         onClick={() => handleDeleteTask(task._id)}
+                         className="flex h-8 items-center justify-center rounded-full bg-red-500/10 px-4 text-xs font-semibold text-red-400 border border-red-500/20 shadow-inner hover:bg-red-500/20 hover:text-red-300 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                       >
                          Delete
                        </button>
                     </div>

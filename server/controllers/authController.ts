@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import User from '../models/User.ts';
 import generateToken from '../utils/generateToken.ts';
+import type { AuthRequest } from '../middleware/authMiddleware.ts';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -70,4 +71,16 @@ export const logoutUser = (req: Request, res: Response): void => {
   });
   
   res.status(200).json({ message: 'Logged out successfully' });
+};
+
+export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (req.user) {
+    res.status(200).json({
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+    });
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
 };
