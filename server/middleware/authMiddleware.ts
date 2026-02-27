@@ -1,6 +1,6 @@
 import jwt, {type JwtPayload } from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
-import  User, {type IUser } from '../models/User.ts';
+import  User, {type IUser } from '../models/User.js';
 
 // 1. Extend the Express Request interface to include our User
 export interface AuthRequest extends Request {

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import User from '../models/User.js';
-import generateToken from '../utils/generateToken.ts';
-import type { AuthRequest } from '../middleware/authMiddleware.ts';
+import generateToken from '../utils/generateToken.js';
+import type { AuthRequest } from '../middleware/authMiddleware.js';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {

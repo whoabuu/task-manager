@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from "./routes/authRoutes.ts";
-import taskRoutes from './routes/taskRoutes.ts';
+import authRoutes from "./routes/authRoutes.js";
+import taskRoutes from './routes/taskRoutes.js';
 import cookieParser from 'cookie-parser';
-import connectDB from './config/db.ts';
+import connectDB from './config/db.js';
 
 dotenv.config();
 
