@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import User from '../models/User.ts';
+import User from '../models/User.js';
 import generateToken from '../utils/generateToken.ts';
 import type { AuthRequest } from '../middleware/authMiddleware.ts';
 
