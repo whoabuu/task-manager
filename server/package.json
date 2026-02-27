@@ -2,11 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon index.js",
-    "start": "node index.js"
+    "server": "nodemon index.ts",
+    "start": "node index.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,5 +21,11 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.2",
     "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }
