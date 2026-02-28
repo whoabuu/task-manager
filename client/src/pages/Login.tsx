@@ -22,8 +22,8 @@ const Login = () => {
       // If successful, redirect to the dashboard!
       navigate('/dashboard');
     } catch (err: any) {
-      // Axios stores the backend error response in err.response.data
-      setError(err.response?.data?.error || 'Failed to log in. Please check your credentials.');
+       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to connect.';
+       setError(typeof errorMessage === 'string' ? errorMessage : 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }

@@ -22,7 +22,8 @@ const Register = () => {
       // Automatically redirect to dashboard upon successful signup
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to connect.';
+       setError(typeof errorMessage === 'string' ? errorMessage : 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
