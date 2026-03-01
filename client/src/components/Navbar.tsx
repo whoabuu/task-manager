@@ -6,9 +6,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      // This hits the backend API to destroy the cookie and clears React's state
       await logout();
-      // Because the state clears, your ProtectedRoute in App.tsx will instantly kick the user back to the Login screen!
     } catch (error) {
       console.error('Failed to log out:', error);
     }

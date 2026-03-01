@@ -1,6 +1,8 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../middleware/authMiddleware.js';
 import Task from '../models/Task.js';
+// import type { AuthRequest } from '../middleware/authMiddleware.ts';
+// import Task from '../models/Task.ts';
 
 export const getTasks = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

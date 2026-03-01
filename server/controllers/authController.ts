@@ -3,6 +3,10 @@ import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import type { AuthRequest } from '../middleware/authMiddleware.js';
 
+// import User from '../models/User.ts';
+// import generateToken from '../utils/generateToken.ts';
+// import type { AuthRequest } from '../middleware/authMiddleware.ts';
+
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body;
@@ -64,12 +68,14 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const logoutUser = (req: Request, res: Response): void => {
+export const logoutUser = (req: Request, res: Response) => {
   res.cookie('jwt', '', {
     httpOnly: true,
-    expires: new Date(0),
+    expires: new Date(0), 
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', 
   });
-  
+
   res.status(200).json({ message: 'Logged out successfully' });
 };
 
